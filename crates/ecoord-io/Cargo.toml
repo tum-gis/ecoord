@@ -1,0 +1,19 @@
+[package]
+name = "ecoord-io"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "IO related logic for the ecoord library"
+
+
+[dependencies]
+ecoord-core = { version = "0.0.1-alpha.1", path = "../ecoord-core", registry = "custom" }
+
+thiserror = { workspace = true }
+serde = { workspace = true, features = [ "derive" ] }
+serde_json = { workspace = true }
+zstd = { workspace = true }
+nalgebra = { workspace = true }
+chrono = { workspace = true }

@@ -1,0 +1,16 @@
+[package]
+name = "ecoord-core"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Core of the ecoord library"
+
+
+[dependencies]
+thiserror = { workspace = true }
+itertools = { workspace = true }
+indextree = { workspace = true }
+chrono = { workspace = true }
+nalgebra = { workspace = true }
