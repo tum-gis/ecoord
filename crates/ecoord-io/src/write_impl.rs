@@ -3,11 +3,11 @@ use crate::documents::{
 };
 use crate::error::Error;
 use ecoord_core::ReferenceFrames;
-use std::fs::OpenOptions;
-use std::path::Path;
+use std::io::Write;
 
-pub fn write_to_json_file(
-    document_path: impl AsRef<Path>,
+pub fn write_to_json_file<W: Write>(
+    writer: W,
+    pretty_write: bool,
     reference_frames: &ReferenceFrames,
 ) -> Result<(), Error> {
     let mut transforms: Vec<TransformElement> = vec![];
@@ -19,7 +19,7 @@ pub fn write_to_json_file(
                 frame_id: transform_id.frame_id.clone().into(),
                 child_frame_id: transform_id.child_frame_id.clone().into(),
                 timestamp: t.timestamp.into(),
-                duration: t.duration.map(|d| d.into()),
+                duration: None,
                 translation: t.translation.into(),
                 rotation: t.rotation.into(),
             })
@@ -63,12 +63,11 @@ pub fn write_to_json_file(
         transform_info,
     };
 
-    let file = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .open(document_path)?;
+    if pretty_write {
+        serde_json::to_writer_pretty(writer, &frames_document)?;
+    } else {
+        serde_json::to_writer(writer, &frames_document)?;
+    }
 
-    serde_json::to_writer_pretty(file, &frames_document)?;
     Ok(())
 }

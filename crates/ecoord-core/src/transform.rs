@@ -1,10 +1,10 @@
 use crate::FrameId;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use nalgebra::{Isometry3, Point3, Rotation3, Translation3, UnitQuaternion, Vector3};
 use std::fmt;
 
 /// Dedicated type for an identifier of a transform.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct TransformId {
     pub frame_id: FrameId,
     pub child_frame_id: FrameId,
@@ -37,7 +37,7 @@ impl fmt::Display for TransformId {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Transform {
     pub timestamp: DateTime<Utc>,
-    pub duration: Option<Duration>,
+    // pub duration: Option<Duration>,
     pub translation: Vector3<f64>,
     pub rotation: UnitQuaternion<f64>,
 }
@@ -45,7 +45,7 @@ pub struct Transform {
 impl Transform {
     pub fn new(
         timestamp: DateTime<Utc>,
-        duration: Option<Duration>,
+        // duration: Option<Duration>,
         translation: Vector3<f64>,
         rotation: UnitQuaternion<f64>,
     ) -> Self {
@@ -53,9 +53,22 @@ impl Transform {
 
         Self {
             timestamp,
-            duration,
+            // duration,
             translation,
             rotation,
+        }
+    }
+
+    pub fn from(
+        timestamp: DateTime<Utc>,
+        // duration: Option<Duration>,
+        isometry: Isometry3<f64>,
+    ) -> Self {
+        Self {
+            timestamp,
+            // duration,
+            translation: isometry.translation.vector,
+            rotation: isometry.rotation,
         }
     }
 

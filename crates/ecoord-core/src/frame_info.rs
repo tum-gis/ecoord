@@ -1,7 +1,7 @@
 use std::fmt;
 
 /// Dedicated type for an identifier of a frame.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct FrameId(String);
 
 impl fmt::Display for FrameId {

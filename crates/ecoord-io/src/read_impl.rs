@@ -5,15 +5,15 @@ use ecoord_core::{
     TransformId, TransformInfo,
 };
 use std::collections::HashMap;
-use std::fs::File;
-use std::path::Path;
+
+use std::io::Read;
+
 use std::str::FromStr;
 
 /// Read a pose from a json file.
 ///
-pub fn read_from_json_file(document_path: impl AsRef<Path>) -> Result<ReferenceFrames, Error> {
-    let file = File::open(document_path)?;
-    let ecoord_document: EcoordDocument = serde_json::from_reader(&file)?;
+pub fn read_from_json_file<R: Read>(reader: R) -> Result<ReferenceFrames, Error> {
+    let ecoord_document: EcoordDocument = serde_json::from_reader(reader)?;
 
     let mut transforms: HashMap<(ChannelId, TransformId), Vec<Transform>> = HashMap::new();
     for current_transform_element in ecoord_document.transforms {
@@ -26,7 +26,7 @@ pub fn read_from_json_file(document_path: impl AsRef<Path>) -> Result<ReferenceF
         );
         let current_transform = Transform::new(
             current_transform_element.timestamp.into(),
-            current_transform_element.duration.map(|d| d.into()),
+            // current_transform_element.duration.map(|d| d.into()),
             current_transform_element.translation.into(),
             current_transform_element.rotation.into(),
         );
@@ -53,7 +53,7 @@ pub fn read_from_json_file(document_path: impl AsRef<Path>) -> Result<ReferenceF
         .transform_info
         .iter()
         .map(|f| {
-            let interpolation_method: Option<ecoord_core::InterpolationMethod> = f
+            let interpolation_method: Option<InterpolationMethod> = f
                 .interpolation_method
                 .clone()
                 .map(|i| InterpolationMethod::from_str(&i).unwrap());
@@ -65,6 +65,6 @@ pub fn read_from_json_file(document_path: impl AsRef<Path>) -> Result<ReferenceF
         .collect();
 
     let reference_frames =
-        ReferenceFrames::new(transforms, frame_info, channel_info, transform_info);
+        ReferenceFrames::new(transforms, frame_info, channel_info, transform_info)?;
     Ok(reference_frames)
 }

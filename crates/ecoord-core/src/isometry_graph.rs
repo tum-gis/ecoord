@@ -1,5 +1,7 @@
 use crate::frame_info::FrameId;
 use crate::transform::TransformId;
+use crate::Error;
+use crate::Error::{InvalidFrameId, MissingTransforms};
 use indextree::{Arena, NodeId};
 use itertools::Itertools;
 use nalgebra::Isometry3;
@@ -7,20 +9,19 @@ use std::collections::{HashMap, HashSet};
 
 /// Implements a single transform graph at a single point in time (without parallel channels).
 ///
+///
+#[derive(Debug, Clone, PartialEq)]
 pub struct IsometryGraph {
     arena: Arena<Isometry3<f64>>,
     transform_id_to_node_id_map: HashMap<TransformId, NodeId>,
     node_id_to_transform_id_map: HashMap<NodeId, TransformId>,
-    // frame_id_to_node_id_map: HashMap<FrameId, NodeId>,
-    // child_frame_id_to_node_id_map: HashMap<FrameId, NodeId>,
 }
 
 impl IsometryGraph {
-    pub fn new(isometry_transforms: HashMap<TransformId, Isometry3<f64>>) -> Self {
-        assert!(
-            !isometry_transforms.is_empty(),
-            "Must contain at least one transform."
-        );
+    pub fn new(isometry_transforms: HashMap<TransformId, Isometry3<f64>>) -> Result<Self, Error> {
+        if isometry_transforms.is_empty() {
+            return Err(MissingTransforms());
+        }
         // TODO: add checks again
         /*
         assert!(
@@ -70,9 +71,9 @@ impl IsometryGraph {
             }*/
         }
 
-        println!("{:?}", arena);
+        //println!("{:?}", arena);
         // debugging
-        for current_node in arena.iter() {
+        /*for current_node in arena.iter() {
             let current_node_id = arena.get_node_id(current_node).unwrap();
             let current_transform_id = node_id_to_transform_id_map.get(&current_node_id).unwrap();
             println!(
@@ -91,60 +92,86 @@ impl IsometryGraph {
                     current_ancestor_transform_id.child_frame_id
                 );
             }
-            println!();
-        }
+        }*/
 
-        Self {
+        let isometry_graph = Self {
             arena,
             transform_id_to_node_id_map,
             node_id_to_transform_id_map,
             //frame_id_to_node_id_map,
             //child_frame_id_to_node_id_map,
-        }
+        };
+        Ok(isometry_graph)
     }
 
     pub fn get_frame_ids(&self) -> HashSet<FrameId> {
+        let mut parent_frame_ids = self.get_parent_frame_ids();
+        let child_frame_ids = self.get_child_frame_ids();
+        parent_frame_ids.extend(child_frame_ids);
+
+        parent_frame_ids
+    }
+
+    pub fn get_parent_frame_ids(&self) -> HashSet<FrameId> {
         self.transform_id_to_node_id_map
             .keys()
-            .fold(Vec::<FrameId>::new(), |mut acc, x| {
-                acc.push(x.frame_id.clone());
-                acc.push(x.child_frame_id.clone());
-                acc
-            })
-            .into_iter()
+            .map(|t| t.frame_id.clone())
             .collect()
     }
 
-    pub fn get_isometry(&self, transform_id: &TransformId) -> Isometry3<f64> {
-        assert!(
-            self.transform_id_to_node_id_map
-                .keys()
-                .any(|k| k.frame_id == transform_id.frame_id),
-            "Transform graph must contain a transform with frame_id: {}",
-            &transform_id.frame_id
-        );
-        assert!(
-            self.transform_id_to_node_id_map
-                .keys()
-                .any(|k| k.child_frame_id == transform_id.child_frame_id),
-            "Transform graph must contain a transform with child_frame_id: {}",
-            &transform_id.child_frame_id
-        );
+    /// Returns all frame ids that are children of a transform.
+    pub fn get_child_frame_ids(&self) -> HashSet<FrameId> {
+        self.transform_id_to_node_id_map
+            .keys()
+            .map(|t| t.child_frame_id.clone())
+            .collect()
+    }
+
+    pub fn contains_parent_frame_id(&self, frame_id: &FrameId) -> bool {
+        let parent_frame_ids = self.get_parent_frame_ids();
+        parent_frame_ids.contains(frame_id)
+    }
+
+    pub fn contains_child_frame_id(&self, frame_id: &FrameId) -> bool {
+        let child_frame_ids = self.get_child_frame_ids();
+        child_frame_ids.contains(frame_id)
+    }
+
+    pub fn get_isometry(&self, transform_id: &TransformId) -> Result<Isometry3<f64>, Error> {
+        if !self.contains_parent_frame_id(&transform_id.frame_id) {
+            return Err(InvalidFrameId(transform_id.frame_id.clone()));
+        }
+        if !self.contains_child_frame_id(&transform_id.child_frame_id) {
+            return Err(InvalidFrameId(transform_id.child_frame_id.clone()));
+        }
+        // assert!(
+        //     self.transform_id_to_node_id_map
+        //         .keys()
+        //         .any(|k| k.frame_id == transform_id.frame_id),
+        //     "Transform graph must contain a transform with frame_id: {}",
+        //     &transform_id.frame_id
+        // );
+        // assert!(
+        //     self.transform_id_to_node_id_map
+        //         .keys()
+        //         .any(|k| k.child_frame_id == transform_id.child_frame_id),
+        //     "Transform graph must contain a transform with child_frame_id: {}",
+        //     &transform_id.child_frame_id
+        // );
 
         let child_node_id = self
             //.child_frame_id_to_node_id_map
             .transform_id_to_node_id_map
             .iter()
             .find(|(t, _)| t.child_frame_id == transform_id.child_frame_id)
-            //.get(&transform_id.child_frame_id)
-            .map(|r| r.1)
-            .unwrap();
+            .ok_or(InvalidFrameId(transform_id.child_frame_id.clone()))?
+            .1;
 
         let mut isometry: Isometry3<f64> = Isometry3::identity();
         let ancestors = child_node_id.ancestors(&self.arena);
-        let anc_pr = ancestors.clone().map(|a| a.to_string()).join(" ");
-        println!("ancestor ids: {}", anc_pr);
-        //let mut selected_nodes: Vec<&Transform> = vec![];
+        // let _anc_pr = ancestors.clone().map(|a| a.to_string()).join(" ");
+        // println!("ancestor ids: {}", anc_pr);
+        // let mut selected_nodes: Vec<&Transform> = vec![];
         for current_ancestor_node_id in ancestors {
             let current_node = self.arena.get(current_ancestor_node_id).unwrap().get();
             let current_transform_id = self
@@ -152,21 +179,20 @@ impl IsometryGraph {
                 .get(&current_ancestor_node_id)
                 .unwrap();
 
-            println!(
-                "current node: frame_id={} child_frame_id={}",
-                &current_transform_id.frame_id, &current_transform_id.child_frame_id
-            );
+            //println!(
+            //    "current node: frame_id={} child_frame_id={}",
+            //    &current_transform_id.frame_id, &current_transform_id.child_frame_id
+            //);
             isometry = current_node * isometry;
-            println!("isometry after: {}", isometry);
+            // println!("isometry after: {}", isometry);
 
             if current_transform_id.frame_id == transform_id.frame_id {
-                println!("doing the break");
                 break;
             }
         }
 
-        dbg!("isometry final: {}", isometry);
-        isometry
+        // dbg!("isometry final: {}", isometry);
+        Ok(isometry)
     }
 }
 
@@ -201,11 +227,13 @@ mod test_graph {
             Isometry3::from_parts(Translation3::new(40.0, 0.0, 0.0), UnitQuaternion::default()),
         );
 
-        let isometry_graph = IsometryGraph::new(isometry_transforms);
-        let result = isometry_graph.get_isometry(&TransformId::new(
-            FrameId::from("slam_map"),
-            FrameId::from("lidar_front_right"),
-        ));
+        let isometry_graph = IsometryGraph::new(isometry_transforms).unwrap();
+        let result = isometry_graph
+            .get_isometry(&TransformId::new(
+                FrameId::from("slam_map"),
+                FrameId::from("lidar_front_right"),
+            ))
+            .unwrap();
 
         assert_eq!(result.translation, Translation3::new(50.0, 0.0, 0.0));
     }

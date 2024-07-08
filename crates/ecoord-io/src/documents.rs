@@ -35,6 +35,7 @@ pub struct TransformElement {
     pub frame_id: String,
     pub child_frame_id: String,
     pub timestamp: TimeElement,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<DurationElement>,
     pub translation: VectorElement,
     pub rotation: QuaternionElement,

@@ -5,7 +5,7 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Core of the ecoord library"
+description = "Core transformations and operations between 3D coordinate frames."
 
 
 [dependencies]
@@ -14,3 +14,5 @@ itertools = { workspace = true }
 indextree = { workspace = true }
 chrono = { workspace = true }
 nalgebra = { workspace = true }
+approx = { workspace = true }
+num-traits = { workspace = true }

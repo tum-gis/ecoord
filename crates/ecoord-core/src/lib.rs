@@ -1,4 +1,5 @@
 mod channel_info;
+mod coords;
 mod error;
 mod frame_info;
 mod isometry_graph;
@@ -6,34 +7,43 @@ mod ops;
 pub mod reference_frames;
 mod transform;
 mod transform_info;
-mod transforms_interpolation;
+mod utils;
 
 #[doc(inline)]
-pub use reference_frames::ReferenceFrames;
+pub use crate::reference_frames::ReferenceFrames;
 
 #[doc(inline)]
-pub use transform::TransformId;
+pub use crate::transform::TransformId;
 
 #[doc(inline)]
-pub use transform::Transform;
+pub use crate::transform::Transform;
 
 #[doc(inline)]
-pub use frame_info::FrameId;
+pub use crate::frame_info::FrameId;
 
 #[doc(inline)]
-pub use frame_info::FrameInfo;
+pub use crate::frame_info::FrameInfo;
 
 #[doc(inline)]
-pub use channel_info::ChannelId;
+pub use crate::channel_info::ChannelId;
 
 #[doc(inline)]
-pub use channel_info::ChannelInfo;
+pub use crate::channel_info::ChannelInfo;
 
 #[doc(inline)]
-pub use transform_info::TransformInfo;
+pub use crate::transform_info::TransformInfo;
 
 #[doc(inline)]
-pub use transform_info::InterpolationMethod;
+pub use crate::transform_info::InterpolationMethod;
 
 #[doc(inline)]
-pub use ops::merge::merge;
+pub use crate::ops::merge::merge;
+
+#[doc(inline)]
+pub use crate::coords::spherical_point::SphericalPoint3;
+
+#[doc(inline)]
+pub use crate::coords::unit_spherical_point::UnitSphericalPoint3;
+
+#[doc(inline)]
+pub use crate::error::Error;

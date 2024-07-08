@@ -1,7 +1,7 @@
 use std::fmt;
 
 /// Dedicated type for an identifier of a channel.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ChannelId(String);
 
 impl fmt::Display for ChannelId {
