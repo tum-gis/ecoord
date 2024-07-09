@@ -5,7 +5,7 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Core transformations and operations between 3D coordinate frames."
+description = "Core primitives and operations for transforms between 3D coordinate frames."
 
 
 [dependencies]

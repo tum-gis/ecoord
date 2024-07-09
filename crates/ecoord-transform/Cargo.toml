@@ -5,10 +5,10 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Supplementary operations for transformations between 3D coordinate frames."
+description = "Supplementary operations for transforms between 3D coordinate frames."
 
 [dependencies]
-ecoord-core = { version = "0.0.1-alpha.2", path = "../ecoord-core" }
+ecoord-core = { version = "0.0.1-alpha.3", path = "../ecoord-core" }
 
 thiserror = { workspace = true }
 itertools = { workspace = true }

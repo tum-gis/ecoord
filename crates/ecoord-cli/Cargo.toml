@@ -5,11 +5,11 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "CLI tool for ecoord operations."
+description = "CLI tool for transforms between 3D coordinate frames."
 
 
 [dependencies]
-ecoord = { version = "0.0.1-alpha.2", path = "../ecoord" }
+ecoord = { version = "0.0.1-alpha.3", path = "../ecoord" }
 
 clap = { workspace = true, features = ["derive"] }
 tracing = { workspace = true }
