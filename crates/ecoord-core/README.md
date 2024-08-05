@@ -1,6 +1,6 @@
-# ecoord-cli
+# ecoord-core
 
-Core primitives and operations for transforms between 3D coordinate frames.
+Core primitives and operations for transforming between 3D coordinate frames.
 
 ## Contributing
 

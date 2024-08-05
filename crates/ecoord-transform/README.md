@@ -1,6 +1,6 @@
-# ecoord-cli
+# ecoord-transform
 
-Supplementary operations for transforms between 3D coordinate frames.
+Supplementary operations for transforming between 3D coordinate frames.
 
 ## Contributing
 

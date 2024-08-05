@@ -5,11 +5,11 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "IO operations for transforms between 3D coordinate frames."
+description = "IO operations for transforming between 3D coordinate frames."
 
 
 [dependencies]
-ecoord-core = { version = "0.0.1-alpha.3", path = "../ecoord-core" }
+ecoord-core = { version = "0.0.1-alpha.4", path = "../ecoord-core" }
 
 thiserror = { workspace = true }
 serde = { workspace = true, features = [ "derive" ] }

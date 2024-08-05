@@ -1,9 +1,8 @@
 # ecoord
 
-Transforms between 3D coordinate frames.
+Library for transforming between 3D coordinate frames.
 
-> [!WARNING]  
-> The library is at an early stage of development.
+The library is at an early stage of development.
 
 ## Contributing
 

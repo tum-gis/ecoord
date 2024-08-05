@@ -2,8 +2,7 @@
 
 A Rust library for transforming between 3D coordinate frames.
 
-> [!WARNING]  
-> The library is at an early stage of development.
+The library is at an early stage of development.
 
 ## Contributing
 

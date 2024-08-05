@@ -1,6 +1,6 @@
-# ecoord-cli
+# ecoord-io
 
-IO operations for transforms between 3D coordinate frames.
+IO operations for transforming between 3D coordinate frames.
 
 ## Contributing
 

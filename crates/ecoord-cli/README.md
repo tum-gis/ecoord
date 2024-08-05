@@ -1,6 +1,6 @@
 # ecoord-cli
 
-CLI tool for transforms between 3D coordinate frames.
+CLI tool for transforming between 3D coordinate frames.
 
 ## Contributing
 
