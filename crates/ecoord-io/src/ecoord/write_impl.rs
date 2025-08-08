@@ -1,4 +1,4 @@
-use crate::documents::{
+use crate::ecoord::documents::{
     ChannelInfoElement, EcoordDocument, FrameInfoElement, TransformElement, TransformInfoElement,
 };
 use crate::error::Error;
@@ -19,7 +19,6 @@ pub fn write_to_json_file<W: Write>(
                 frame_id: transform_id.frame_id.clone().into(),
                 child_frame_id: transform_id.child_frame_id.clone().into(),
                 timestamp: t.timestamp.into(),
-                duration: None,
                 translation: t.translation.into(),
                 rotation: t.rotation.into(),
             })
@@ -49,11 +48,7 @@ pub fn write_to_json_file<W: Write>(
     let transform_info: Vec<TransformInfoElement> = reference_frames
         .transform_info()
         .iter()
-        .map(|f| TransformInfoElement {
-            frame_id: f.0.frame_id.clone().into(),
-            child_frame_id: f.0.child_frame_id.clone().into(),
-            interpolation_method: f.1.interpolation_method.map(|i| i.as_str().into()),
-        })
+        .map(|f| f.into())
         .collect();
 
     let frames_document = EcoordDocument {

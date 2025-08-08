@@ -59,7 +59,11 @@ pub fn merge(reference_frames: &[ReferenceFrames]) -> Result<ReferenceFrames, Er
     }
 
     for current_transform in all_transforms.values_mut() {
-        current_transform.sort_by_key(|t| t.timestamp.timestamp_nanos());
+        current_transform.sort_by_key(|t| {
+            t.timestamp
+                .timestamp_nanos_opt()
+                .expect("should be defined")
+        });
     }
 
     ReferenceFrames::new(

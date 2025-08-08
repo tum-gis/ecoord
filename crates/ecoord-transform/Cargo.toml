@@ -8,9 +8,8 @@ repository.workspace = true
 description = "Supplementary operations for transforming between 3D coordinate frames."
 
 [dependencies]
-ecoord-core = { version = "0.0.1-alpha.4", path = "../ecoord-core" }
+ecoord-core = { version = "0.0.1-alpha.8", path = "../ecoord-core" }
 
 thiserror = { workspace = true }
 itertools = { workspace = true }
-indextree = { workspace = true }
 chrono = { workspace = true }

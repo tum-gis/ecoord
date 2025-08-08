@@ -1,52 +1,43 @@
 use crate::Transform;
 use chrono::{DateTime, Utc};
 
-/// Returns true if all transforms are equal or if there is only one.
+/// Returns true if all transforms are equal.
 pub fn is_static(transforms: &[Transform]) -> bool {
-    let first_transform = transforms.first().unwrap();
-    transforms.iter().all(|t| {
-        t.translation == first_transform.translation && t.rotation == first_transform.rotation
-    })
+    if let Some(first) = transforms.first() {
+        transforms
+            .iter()
+            .all(|t| t.translation == first.translation && t.rotation == first.rotation)
+    } else {
+        true
+    }
 }
 
 pub fn get_previous_transform(
     transforms: &[Transform],
     timestamp: &DateTime<Utc>,
 ) -> Option<Transform> {
-    let previous_timestamps: Vec<&Transform> = transforms
+    transforms
         .iter()
-        .filter(|t| t.timestamp.timestamp_nanos() <= timestamp.timestamp_nanos())
-        .collect();
-
-    let previous = previous_timestamps
-        .iter()
-        .max_by_key(|t| t.timestamp.timestamp_nanos())
-        .map(|&t| t.clone());
-
-    previous
+        .filter(|t| t.timestamp <= *timestamp)
+        .max_by_key(|t| t.timestamp)
+        .cloned()
 }
 
 pub fn get_next_transform(
     transforms: &[Transform],
     timestamp: &DateTime<Utc>,
 ) -> Option<Transform> {
-    let next_timestamps: Vec<&Transform> = transforms
+    transforms
         .iter()
-        .filter(|t| timestamp.timestamp_nanos() < t.timestamp.timestamp_nanos())
-        .collect();
-
-    let next = next_timestamps
-        .iter()
-        .min_by_key(|t| t.timestamp.timestamp_nanos())
-        .map(|&t| t.clone());
-
-    next
+        .filter(|t| *timestamp < t.timestamp)
+        .min_by_key(|t| t.timestamp)
+        .cloned()
 }
 
 #[cfg(test)]
 mod test_get_previous {
-    use crate::utils::transform_list_utils::get_previous_transform;
     use crate::Transform;
+    use crate::utils::transform_list_utils::get_previous_transform;
     use chrono::{DateTime, TimeZone, Utc};
     use nalgebra::{UnitQuaternion, Vector3};
 
@@ -62,7 +53,7 @@ mod test_get_previous {
             Vector3::new(3.0, 6.0, -9.0),
             UnitQuaternion::from_euler_angles(std::f64::consts::PI, 0.0, 0.0),
         );
-        let transforms: Vec<Transform> = vec![transform_a, transform_b]; // : &Vec<Transform>, timestamp: &DateTime<Utc>
+        let transforms: Vec<Transform> = vec![transform_a, transform_b];
         let timestamp: DateTime<Utc> = Utc.timestamp_opt(1, 2000).unwrap();
         let result = get_previous_transform(&transforms, &timestamp).unwrap();
 

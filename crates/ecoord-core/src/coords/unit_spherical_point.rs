@@ -1,5 +1,5 @@
 use crate::SphericalPoint3;
-use nalgebra::{distance, Point3, RealField};
+use nalgebra::{Point3, RealField, distance};
 use num_traits::Float;
 use std::fmt::Debug;
 

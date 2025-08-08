@@ -11,8 +11,10 @@ description = "Core primitives and operations for transforming between 3D coordi
 [dependencies]
 thiserror = { workspace = true }
 itertools = { workspace = true }
-indextree = { workspace = true }
 chrono = { workspace = true }
 nalgebra = { workspace = true }
 approx = { workspace = true }
 num-traits = { workspace = true }
+rayon = { workspace = true }
+petgraph = { workspace = true }
+rand = { workspace = true }

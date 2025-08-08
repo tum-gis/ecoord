@@ -9,11 +9,12 @@ description = "IO operations for transforming between 3D coordinate frames."
 
 
 [dependencies]
-ecoord-core = { version = "0.0.1-alpha.4", path = "../ecoord-core" }
+ecoord-core = { version = "0.0.1-alpha.8", path = "../ecoord-core" }
 
 thiserror = { workspace = true }
 serde = { workspace = true, features = [ "derive" ] }
 serde_json = { workspace = true }
+csv = { workspace = true }
 zstd = { workspace = true }
 nalgebra = { workspace = true }
 chrono = { workspace = true }

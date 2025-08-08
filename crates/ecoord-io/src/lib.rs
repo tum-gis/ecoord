@@ -1,17 +1,15 @@
-mod documents;
+mod ecoord;
 mod error;
-mod read;
-mod read_impl;
-mod write;
-mod write_impl;
+mod kitti;
 
 #[doc(inline)]
 pub use crate::error::Error;
 
 #[doc(inline)]
-pub use crate::read::EcoordReader;
+pub use crate::ecoord::read::EcoordReader;
 
 #[doc(inline)]
-pub use crate::write::EcoordWriter;
+pub use crate::ecoord::write::EcoordWriter;
 
-pub const FILE_EXTENSION_ECOORD_FORMAT: &str = "json";
+#[doc(inline)]
+pub use crate::kitti::read::KittiReader;

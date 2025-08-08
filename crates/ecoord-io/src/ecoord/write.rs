@@ -1,7 +1,7 @@
-use crate::error::Error;
-use crate::write_impl::write_to_json_file;
 use crate::Error::{InvalidFileExtension, NoFileExtension};
-use crate::FILE_EXTENSION_ECOORD_FORMAT;
+use crate::ecoord::FILE_EXTENSION_ECOORD_FORMAT;
+use crate::ecoord::write_impl::write_to_json_file;
+use crate::error::Error;
 use ecoord_core::ReferenceFrames;
 use std::fs::{File, OpenOptions};
 use std::io::Write;

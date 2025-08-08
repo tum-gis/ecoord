@@ -3,6 +3,7 @@ mod coords;
 mod error;
 mod frame_info;
 mod isometry_graph;
+pub mod octree;
 mod ops;
 pub mod reference_frames;
 mod transform;
@@ -37,6 +38,9 @@ pub use crate::transform_info::TransformInfo;
 pub use crate::transform_info::InterpolationMethod;
 
 #[doc(inline)]
+pub use crate::transform_info::ExtrapolationMethod;
+
+#[doc(inline)]
 pub use crate::ops::merge::merge;
 
 #[doc(inline)]
@@ -44,6 +48,15 @@ pub use crate::coords::spherical_point::SphericalPoint3;
 
 #[doc(inline)]
 pub use crate::coords::unit_spherical_point::UnitSphericalPoint3;
+
+#[doc(inline)]
+pub use crate::coords::bounding_box::HasAabb;
+
+#[doc(inline)]
+pub use crate::coords::bounding_box::AxisAlignedBoundingBox;
+
+#[doc(inline)]
+pub use crate::coords::bounding_box::AxisAlignedBoundingCube;
 
 #[doc(inline)]
 pub use crate::error::Error;

@@ -37,7 +37,6 @@ impl fmt::Display for TransformId {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Transform {
     pub timestamp: DateTime<Utc>,
-    // pub duration: Option<Duration>,
     pub translation: Vector3<f64>,
     pub rotation: UnitQuaternion<f64>,
 }
@@ -45,7 +44,6 @@ pub struct Transform {
 impl Transform {
     pub fn new(
         timestamp: DateTime<Utc>,
-        // duration: Option<Duration>,
         translation: Vector3<f64>,
         rotation: UnitQuaternion<f64>,
     ) -> Self {
@@ -53,20 +51,14 @@ impl Transform {
 
         Self {
             timestamp,
-            // duration,
             translation,
             rotation,
         }
     }
 
-    pub fn from(
-        timestamp: DateTime<Utc>,
-        // duration: Option<Duration>,
-        isometry: Isometry3<f64>,
-    ) -> Self {
+    pub fn from(timestamp: DateTime<Utc>, isometry: Isometry3<f64>) -> Self {
         Self {
             timestamp,
-            // duration,
             translation: isometry.translation.vector,
             rotation: isometry.rotation,
         }

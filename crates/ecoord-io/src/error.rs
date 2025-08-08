@@ -9,6 +9,9 @@ pub enum Error {
     #[error(transparent)]
     Parsing(#[from] serde_json::Error),
 
+    #[error(transparent)]
+    KittiReader(#[from] crate::kitti::error::Error),
+
     #[error("file extension is invalid")]
     NoFileExtension(),
     #[error("file extension `{0}` is invalid")]

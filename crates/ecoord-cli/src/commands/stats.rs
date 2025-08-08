@@ -1,14 +1,12 @@
 use std::path::Path;
 
+use crate::error::Error;
 use tracing::info;
 
-pub fn run(ecoord_file_path: impl AsRef<Path>) {
+pub fn run(ecoord_file_path: impl AsRef<Path>) -> Result<(), Error> {
     info!("Ecoord path: {}", &ecoord_file_path.as_ref().display());
 
-    let reference_frames = ecoord::io::EcoordReader::from_path(ecoord_file_path)
-        .unwrap()
-        .finish()
-        .unwrap();
+    let reference_frames = ecoord::io::EcoordReader::from_path(ecoord_file_path)?.finish()?;
 
     for ((current_channel_id, current_transform_id), current_transforms) in
         reference_frames.transforms()
@@ -48,4 +46,6 @@ pub fn run(ecoord_file_path: impl AsRef<Path>) {
         info!("");
         //reference_frames.transforms()
     }
+
+    Ok(())
 }

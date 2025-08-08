@@ -9,10 +9,13 @@ description = "CLI tool for transforming between 3D coordinate frames."
 
 
 [dependencies]
-ecoord = { version = "0.0.1-alpha.4", path = "../ecoord" }
+ecoord = { version = "0.0.1-alpha.8", path = "../ecoord" }
 
 clap = { workspace = true, features = ["derive"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 nalgebra = { workspace = true }
 chrono = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+humantime = { workspace = true }

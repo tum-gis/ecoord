@@ -33,11 +33,11 @@ impl From<&str> for FrameId {
 ///
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct FrameInfo {
-    pub crs_epsg: Option<i32>,
+    pub crs_epsg: Option<u32>,
 }
 
 impl FrameInfo {
-    pub fn new(crs_epsg: Option<i32>) -> Self {
+    pub fn new(crs_epsg: Option<u32>) -> Self {
         Self { crs_epsg }
     }
 }

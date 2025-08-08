@@ -35,9 +35,6 @@
 //!         - `timestamp`:
 //!             - sec: [i32]
 //!             - nanosec: [u32]
-//!         - `duration`: [Option] durations must lead to overlaps (no undefined times)
-//!             - sec: [i32]
-//!             - nanosec: [u32]
 //!         - `translation`
 //!             - `x`: [f64]
 //!             - `y`: [f64]
@@ -48,7 +45,7 @@
 //!             - `z`: [f64]
 //!             - `w`: [f64]
 //!     - `channel_info`: additional information on channels
-//!         - `ìd`: [String]
+//!         - `id`: [String]
 //!         - `priority`: [Option]<[i32]>
 //!             - default: `0`
 //!             - if multiple channels hold transforms for the same frame to child frame, the one with the higher priority is selected
@@ -65,8 +62,9 @@
 //!
 
 pub use ecoord_core::{
-    merge, ChannelId, ChannelInfo, Error, FrameId, FrameInfo, InterpolationMethod, ReferenceFrames,
-    SphericalPoint3, Transform, TransformId, TransformInfo, UnitSphericalPoint3,
+    AxisAlignedBoundingBox, AxisAlignedBoundingCube, ChannelId, ChannelInfo, Error,
+    ExtrapolationMethod, FrameId, FrameInfo, HasAabb, InterpolationMethod, ReferenceFrames,
+    SphericalPoint3, Transform, TransformId, TransformInfo, UnitSphericalPoint3, merge, octree,
 };
 
 pub use ecoord_io as io;

@@ -3,25 +3,34 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("data store disconnected")]
+    #[error(transparent)]
+    CoordsError(#[from] crate::coords::error::Error),
+
+    #[error("invalid channel id `{0}`")]
     InvalidChannelId(ChannelId),
-    #[error("data store disconnected")]
+    #[error("invalid channel ids")]
     InvalidChannelIds(Vec<ChannelId>),
     #[error("transform with id `{1}` not available for channel with id `{0}`")]
     InvalidTransformId(ChannelId, TransformId),
 
-    #[error("frame id unknown")]
+    #[error("invalid frame id `{0}`")]
     InvalidFrameId(FrameId),
 
-    #[error("data store disconnected")]
+    #[error("no channels")]
     NoChannels(),
-    #[error("data store disconnected")]
-    MissingTransforms(),
+    #[error("no transforms")]
+    NoTransforms(),
 
-    #[error("transforms must be sorted strictly ascending by timestamp")]
+    #[error("no transform path found for `{0}`")]
+    NoTransformPath(TransformId),
+
+    #[error("multiple transform path found for `{0}`")]
+    MultipleTransformPaths(TransformId),
+
+    #[error("no timestamp")]
     MissingTimestamp(),
 
-    #[error("transforms must be sorted strictly ascending by timestamp")]
+    #[error("transforms not sorted by timestamp")]
     TransformsNotSortedByTime(),
 
     #[error("transforms must be sorted strictly ascending by timestamp")]

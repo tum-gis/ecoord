@@ -1,7 +1,7 @@
-use crate::error::Error;
-use crate::read_impl::read_from_json_file;
 use crate::Error::{InvalidFileExtension, NoFileExtension};
-use crate::FILE_EXTENSION_ECOORD_FORMAT;
+use crate::ecoord::FILE_EXTENSION_ECOORD_FORMAT;
+use crate::ecoord::read_impl::read_from_json_file;
+use crate::error::Error;
 use ecoord_core::ReferenceFrames;
 use std::fs::File;
 use std::io::Read;
