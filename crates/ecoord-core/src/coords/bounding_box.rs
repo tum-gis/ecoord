@@ -58,6 +58,11 @@ impl AxisAlignedBoundingBox {
         self.upper_bound - self.lower_bound
     }
 
+    pub fn volume(&self) -> f64 {
+        let diagonal = self.diagonal();
+        diagonal.x * diagonal.y * diagonal.z
+    }
+
     pub fn get_center(&self) -> Point3<f64> {
         let diagonal = self.upper_bound - self.lower_bound;
         self.lower_bound + diagonal / 2.0

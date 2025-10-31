@@ -32,6 +32,18 @@ impl<T: HasAabb + Sync + Send + Clone + 'static + Debug> Octree<T> {
         })
     }
 
+    pub fn from_raw_parts(
+        bounds: OctreeBounds,
+        occupancy_graph: OctreeOccupancyGraph,
+        cells: HashMap<OctantIndex, Vec<T>>,
+    ) -> Result<Self, crate::Error> {
+        Ok(Self {
+            bounds,
+            occupancy_graph,
+            cells,
+        })
+    }
+
     /// Returns the bounds of the octree.
     pub fn bounds(&self) -> &OctreeBounds {
         &self.bounds
@@ -262,7 +274,7 @@ mod tests {
     use nalgebra::Point3;
 
     #[test]
-    fn test_octant_bounding_cube_boundary_issue() {
+    fn test_octant_enclosing_cube_boundary_issue() {
         let point_a = Point3::new(691140.231908248, 5338107.586181451, 483.81417527816086);
         let point_b = Point3::new(691201.311408248, 5338168.665681452, 544.8936752782698);
 
@@ -273,7 +285,7 @@ mod tests {
     }
 
     #[test]
-    fn test_octant_bounding_cube_boundary_issue_2() {
+    fn test_octant_enclosing_cube_boundary_issue_2() {
         let point_a = Point3::new(0.0, 0.0, 0.0);
         let point_b = Point3::new(64.0f64, 64.0f64, 64.0f64);
         let point_b_next_up = Point3::new(64.0f64.next_up(), 64.0f64.next_up(), 64.0f64.next_up());

@@ -16,4 +16,6 @@ pub enum Error {
     NoFileExtension(),
     #[error("file extension `{0}` is invalid")]
     InvalidFileExtension(String),
+    #[error("file extension is invalid")]
+    NoFileName(),
 }

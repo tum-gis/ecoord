@@ -534,20 +534,20 @@ impl ReferenceFrames {
         selected_channel_ids: &Option<HashSet<ChannelId>>,
         selected_timestamp: &Option<DateTime<Utc>>,
     ) -> Result<IsometryGraph, Error> {
-        if let Some(channel_names) = &selected_channel_ids {
-            if channel_names.is_empty() {
-                return Err(NoChannels());
-            }
+        if let Some(channel_names) = &selected_channel_ids
+            && channel_names.is_empty()
+        {
+            return Err(NoChannels());
         }
 
         let mut selected_isometries: HashMap<TransformId, Isometry3<f64>> = HashMap::new();
-        let selected_transforms: HashMap<(ChannelId, TransformId), Vec<Transform>> =
+        let selected_transforms: &HashMap<(ChannelId, TransformId), Vec<Transform>> =
             match &selected_channel_ids {
-                Some(channel_names) => filter_by_channel(&self.transforms, channel_names),
-                None => self.transforms.clone(),
+                Some(channel_names) => &filter_by_channel(&self.transforms, channel_names),
+                None => &self.transforms,
             };
 
-        let mut prioritized_selected_transforms: HashMap<TransformId, Vec<Transform>> =
+        let mut prioritized_selected_transforms: HashMap<&TransformId, &Vec<Transform>> =
             HashMap::new();
         for (_, group) in &selected_transforms
             .iter()
@@ -562,16 +562,15 @@ impl ReferenceFrames {
                 })
                 .unwrap();
 
-            prioritized_selected_transforms
-                .insert(highest_priority.0.1.clone(), highest_priority.1.clone());
+            prioritized_selected_transforms.insert(&highest_priority.0.1, highest_priority.1);
         }
 
         for (current_transform_id, current_transforms) in prioritized_selected_transforms {
             let interpolated_transform = inter_and_extrapolate_transforms(
-                &current_transforms,
+                current_transforms,
                 selected_timestamp,
-                self.get_interpolation_method(&current_transform_id),
-                self.get_extrapolation_method(&current_transform_id),
+                self.get_interpolation_method(current_transform_id),
+                self.get_extrapolation_method(current_transform_id),
             )?;
             selected_isometries.insert(current_transform_id.clone(), interpolated_transform);
         }

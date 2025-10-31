@@ -18,3 +18,4 @@ csv = { workspace = true }
 zstd = { workspace = true }
 nalgebra = { workspace = true }
 chrono = { workspace = true }
+log = "0.4.28"

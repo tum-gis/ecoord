@@ -59,6 +59,9 @@
 //!         - `interpolation_method`: [Option]<[String]>
 //!             - `step` (default): piecewise constant interpolation
 //!             - `linear`: linear interpolation
+//!         - `extrapolation_method`: [Option]<[String]>
+//!             - `constant` (default): constant extrapolation
+//!             - `linear`: linear extrapolation
 //!
 
 pub use ecoord_core::{

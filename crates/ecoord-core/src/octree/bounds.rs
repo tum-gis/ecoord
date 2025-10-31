@@ -22,9 +22,8 @@ impl OctreeBounds {
         }
     }
 
-    /// Enclosing cube enlarged to have a power of two edge lengths
-    pub fn bounding_box(&self) -> &AxisAlignedBoundingCube {
-        &self.enclosing_cube
+    pub fn bounding_box(&self) -> &AxisAlignedBoundingBox {
+        &self.bounding_box
     }
 
     /// Enclosing cube enlarged to have a power of two edge lengths

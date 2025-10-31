@@ -17,6 +17,7 @@ pub fn run(
     world_offset_channel_id: ChannelId,
     world_frame_id: FrameId,
     world_offset: Option<Vector3<f64>>,
+    pretty: bool,
 ) -> Result<(), Error> {
     info!(
         "Convert from KITTI at {}",
@@ -33,7 +34,7 @@ pub fn run(
         .finish(start_date_time, stop_date_time)?;
 
     EcoordWriter::from_path(&ecoord_file_path)?
-        .with_pretty_write(true)
+        .with_pretty(pretty)
         .finish(&reference_frames)?;
     info!(
         "Completed conversion and writing to {}",

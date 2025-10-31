@@ -1,5 +1,7 @@
 use crate::Error::{MissingTimestamp, NoTransforms};
-use crate::utils::transform_list_utils::{get_next_transform, get_previous_transform, is_static};
+use crate::utils::transform_list_utils::{
+    get_previous_and_next_transform, get_previous_transform, is_time_dependent,
+};
 use crate::{Error, ExtrapolationMethod, InterpolationMethod, Transform};
 use chrono::{DateTime, Duration, Utc};
 use nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
@@ -23,7 +25,7 @@ pub fn inter_and_extrapolate_transforms(
             .all(|t| t[0].timestamp < t[1].timestamp),
         "transforms must be strictly sorted by timestamp"
     );
-    if is_static(transforms) {
+    if !is_time_dependent(transforms) {
         return Ok(transforms
             .first()
             .expect("at least one transform must be present")
@@ -99,11 +101,14 @@ fn interpolate_step_function(
     transforms: &Vec<Transform>,
     timestamp: &DateTime<Utc>,
 ) -> Isometry3<f64> {
+    /*transforms
+    .binary_search_by_key(&13, |&(a, b)| b)
+    .expect("TODO: panic message");*/
+
     let transform = get_previous_transform(transforms, timestamp).unwrap_or_else(|| {
-        transforms
+        *transforms
             .first()
             .expect("at least one transform must be present")
-            .clone()
     });
 
     Isometry3::from_parts(transform.translation.into(), transform.rotation)
@@ -114,10 +119,11 @@ fn interpolate_step_function(
 /// If requested [timestamp] is before the first transform in the vector, simply the first
 /// transform is returned.
 fn interpolate_linearly(transforms: &Vec<Transform>, timestamp: &DateTime<Utc>) -> Isometry3<f64> {
-    let previous_transform =
-        get_previous_transform(transforms, timestamp).expect("previous transform must be present");
-    let next_transform =
-        get_next_transform(transforms, timestamp).expect("next transform must be present");
+    let (previous_transform, next_transform) =
+        get_previous_and_next_transform(transforms, timestamp);
+
+    let previous_transform = previous_transform.expect("previous transform must be present");
+    let next_transform = next_transform.expect("next transform must be present");
 
     let duration: Duration = next_transform.timestamp - previous_transform.timestamp;
     let first_duration = *timestamp - previous_transform.timestamp;

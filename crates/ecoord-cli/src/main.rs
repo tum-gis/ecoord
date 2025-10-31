@@ -9,7 +9,6 @@ use crate::cli::{Cli, Commands};
 use clap::Parser;
 use ecoord::{ChannelId, FrameId};
 use nalgebra::Vector3;
-use std::path::PathBuf;
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
@@ -17,13 +16,12 @@ fn main() -> Result<()> {
 
     match &cli.command {
         Commands::Stats { ecoord_file_path } => {
-            let ecoord_file_path = PathBuf::from(ecoord_file_path);
-
             commands::stats::run(ecoord_file_path)?;
         }
         Commands::ConvertFromKittiFormat {
             kitti_file_path,
             ecoord_file_path,
+            pretty,
             start_date_time,
             stop_date_time,
             trajectory_channel_id,
@@ -33,8 +31,6 @@ fn main() -> Result<()> {
             world_frame_id,
             world_offset,
         } => {
-            let kitti_file_path = PathBuf::from(kitti_file_path);
-            let ecoord_file_path = PathBuf::from(ecoord_file_path);
             let trajectory_channel_id = ChannelId::from(trajectory_channel_id.clone());
             let trajectory_frame_id = FrameId::from(trajectory_frame_id.clone());
             let trajectory_child_frame_id = FrameId::from(trajectory_child_frame_id.clone());
@@ -52,7 +48,7 @@ fn main() -> Result<()> {
                 }
             };
 
-            commands::convert::run(
+            commands::convert_kitti::run(
                 kitti_file_path,
                 ecoord_file_path,
                 *start_date_time,
@@ -63,6 +59,28 @@ fn main() -> Result<()> {
                 world_offset_channel_id,
                 world_frame_id,
                 world_offset,
+                *pretty,
+            )?;
+        }
+        Commands::ConvertFromTabularFormat {
+            input_path,
+            output_path,
+            trajectory_channel_id,
+            trajectory_frame_id,
+            trajectory_child_frame_id,
+            pretty,
+        } => {
+            let trajectory_channel_id = ChannelId::from(trajectory_channel_id.clone());
+            let trajectory_frame_id = FrameId::from(trajectory_frame_id.clone());
+            let trajectory_child_frame_id = FrameId::from(trajectory_child_frame_id.clone());
+
+            commands::convert_tabular::run(
+                input_path,
+                output_path,
+                trajectory_channel_id,
+                trajectory_frame_id,
+                trajectory_child_frame_id,
+                *pretty,
             )?;
         }
     };

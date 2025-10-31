@@ -6,12 +6,13 @@ use ecoord_core::{
 use std::collections::HashMap;
 
 use crate::ecoord::documents::EcoordDocument;
-use std::io::Read;
+use std::io::{BufReader, Read};
 
 /// Read a pose from a json file.
 ///
 pub fn read_from_json_file<R: Read>(reader: R) -> Result<ReferenceFrames, Error> {
-    let ecoord_document: EcoordDocument = serde_json::from_reader(reader)?;
+    let buffered_reader = BufReader::new(reader);
+    let ecoord_document: EcoordDocument = serde_json::from_reader(buffered_reader)?;
 
     let mut transforms: HashMap<(ChannelId, TransformId), Vec<Transform>> = HashMap::new();
     for current_transform_element in ecoord_document.transforms {

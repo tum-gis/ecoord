@@ -34,7 +34,7 @@ impl fmt::Display for TransformId {
 }
 
 /// A time-dependent rigid transformation in 3D.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Transform {
     pub timestamp: DateTime<Utc>,
     pub translation: Vector3<f64>,

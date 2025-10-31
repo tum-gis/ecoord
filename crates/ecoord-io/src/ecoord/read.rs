@@ -1,4 +1,4 @@
-use crate::Error::{InvalidFileExtension, NoFileExtension};
+use crate::Error::{InvalidFileExtension, NoFileName};
 use crate::ecoord::FILE_EXTENSION_ECOORD_FORMAT;
 use crate::ecoord::read_impl::read_from_json_file;
 use crate::error::Error;
@@ -26,11 +26,14 @@ impl<R: Read> EcoordReader<R> {
 
 impl EcoordReader<File> {
     pub fn from_path(path: impl AsRef<Path>) -> Result<Self, Error> {
-        let extension = path.as_ref().extension().ok_or(NoFileExtension())?;
-        if extension != FILE_EXTENSION_ECOORD_FORMAT {
-            return Err(InvalidFileExtension(
-                extension.to_str().unwrap_or_default().to_string(),
-            ));
+        let file_name_str = path
+            .as_ref()
+            .file_name()
+            .ok_or(NoFileName())?
+            .to_string_lossy()
+            .to_lowercase();
+        if !file_name_str.ends_with(FILE_EXTENSION_ECOORD_FORMAT) {
+            return Err(InvalidFileExtension(file_name_str.to_string()));
         }
 
         let file = File::open(path)?;

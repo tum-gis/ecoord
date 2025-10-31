@@ -3,11 +3,11 @@ use crate::ecoord::documents::{
 };
 use crate::error::Error;
 use ecoord_core::ReferenceFrames;
-use std::io::Write;
+use std::io::{BufWriter, Write};
 
 pub fn write_to_json_file<W: Write>(
     writer: W,
-    pretty_write: bool,
+    pretty: bool,
     reference_frames: &ReferenceFrames,
 ) -> Result<(), Error> {
     let mut transforms: Vec<TransformElement> = vec![];
@@ -58,10 +58,11 @@ pub fn write_to_json_file<W: Write>(
         transform_info,
     };
 
-    if pretty_write {
-        serde_json::to_writer_pretty(writer, &frames_document)?;
+    let buffered_writer = BufWriter::new(writer);
+    if pretty {
+        serde_json::to_writer_pretty(buffered_writer, &frames_document)?;
     } else {
-        serde_json::to_writer(writer, &frames_document)?;
+        serde_json::to_writer(buffered_writer, &frames_document)?;
     }
 
     Ok(())
