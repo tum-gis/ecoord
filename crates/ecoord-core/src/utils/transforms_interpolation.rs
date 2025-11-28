@@ -1,69 +1,25 @@
-use crate::Error::{MissingTimestamp, NoTransforms};
-use crate::utils::transform_list_utils::{
-    get_previous_and_next_transform, get_previous_transform, is_time_dependent,
-};
-use crate::{Error, ExtrapolationMethod, InterpolationMethod, Transform};
+use crate::Transform;
+use crate::transform::TimedTransform;
+use crate::utils::transform_list_utils::{get_previous_and_next_transform, get_previous_transform};
 use chrono::{DateTime, Duration, Utc};
-use nalgebra::{Isometry3, Translation3, UnitQuaternion, Vector3};
+use nalgebra::{UnitQuaternion, Vector3};
 
-pub fn inter_and_extrapolate_transforms(
-    transforms: &Vec<Transform>,
-    timestamp: &Option<DateTime<Utc>>,
-    interpolation_method: InterpolationMethod,
-    extrapolation_method: ExtrapolationMethod,
-) -> Result<Isometry3<f64>, Error> {
-    if transforms.is_empty() {
-        return Err(NoTransforms());
-    }
-    debug_assert!(
-        transforms.is_sorted_by_key(|t| t.timestamp),
-        "transforms must be sorted by timestamp"
-    );
-    debug_assert!(
-        transforms
-            .windows(2)
-            .all(|t| t[0].timestamp < t[1].timestamp),
-        "transforms must be strictly sorted by timestamp"
-    );
-    if !is_time_dependent(transforms) {
-        return Ok(transforms
-            .first()
-            .expect("at least one transform must be present")
-            .isometry());
-    }
-    let timestamp = timestamp.ok_or(MissingTimestamp())?;
-    let first_transform = transforms
-        .first()
-        .expect("at least one transform must be present");
-    let last_transform = transforms
-        .last()
-        .expect("at least one transform must be present");
-    if timestamp < first_transform.timestamp || last_transform.timestamp < timestamp {
-        return match extrapolation_method {
-            ExtrapolationMethod::Constant => Ok(extrapolate_constant(transforms, &timestamp)),
-            ExtrapolationMethod::Linear => Ok(extrapolate_linear(transforms, &timestamp)),
-        };
-    }
-
-    match interpolation_method {
-        InterpolationMethod::Step => Ok(interpolate_step_function(transforms, &timestamp)),
-        InterpolationMethod::Linear => Ok(interpolate_linearly(transforms, &timestamp)),
-    }
-}
-
-fn extrapolate_constant(transforms: &Vec<Transform>, timestamp: &DateTime<Utc>) -> Isometry3<f64> {
+pub(crate) fn extrapolate_constant(
+    transforms: &Vec<TimedTransform>,
+    timestamp: &DateTime<Utc>,
+) -> Transform {
     let first_transform = transforms
         .first()
         .expect("at least one transform must be present");
     if *timestamp <= first_transform.timestamp {
-        return first_transform.isometry();
+        return first_transform.transform;
     }
 
     let last_transform = transforms
         .last()
         .expect("at least one transform must be present");
     if last_transform.timestamp <= *timestamp {
-        return last_transform.isometry();
+        return last_transform.transform;
     }
 
     panic!(
@@ -71,10 +27,25 @@ fn extrapolate_constant(transforms: &Vec<Transform>, timestamp: &DateTime<Utc>) 
     );
 }
 
-fn extrapolate_linear(transforms: &Vec<Transform>, timestamp: &DateTime<Utc>) -> Isometry3<f64> {
-    let (t1, t2) = if *timestamp < transforms.first().expect("should work").timestamp {
+pub(crate) fn extrapolate_linear(
+    transforms: &Vec<TimedTransform>,
+    timestamp: &DateTime<Utc>,
+) -> Transform {
+    let first_timed_transform = transforms.first().expect("should work");
+    let last_timed_transform = transforms.last().expect("should work");
+
+    // early returns
+    if *timestamp == first_timed_transform.timestamp {
+        return first_timed_transform.transform;
+    }
+    if *timestamp == last_timed_transform.timestamp {
+        return last_timed_transform.transform;
+    }
+
+    // select interpolation candidates
+    let (t1, t2) = if *timestamp < first_timed_transform.timestamp {
         (&transforms[0], &transforms[1])
-    } else if transforms.last().expect("should work").timestamp < *timestamp {
+    } else if last_timed_transform.timestamp < *timestamp {
         let last_two = &transforms[transforms.len() - 2..];
         (&last_two[0], &last_two[1])
     } else {
@@ -91,34 +62,38 @@ fn extrapolate_linear(transforms: &Vec<Transform>, timestamp: &DateTime<Utc>) ->
         .expect("should work") as f64
         / difference_time;
 
-    let translation: Vector3<f64> = t1.translation + alpha * (t2.translation - t1.translation);
-    let rotation: UnitQuaternion<f64> = t1.rotation.slerp(&t2.rotation, alpha);
+    let translation: Vector3<f64> =
+        t1.transform.translation + alpha * (t2.transform.translation - t1.transform.translation);
+    let rotation: UnitQuaternion<f64> = t1.transform.rotation.slerp(&t2.transform.rotation, alpha);
 
-    Isometry3::from_parts(Translation3::from(translation), rotation)
+    Transform::new(translation, rotation)
 }
 
-fn interpolate_step_function(
-    transforms: &Vec<Transform>,
+pub(crate) fn interpolate_step_function(
+    transforms: &Vec<TimedTransform>,
     timestamp: &DateTime<Utc>,
-) -> Isometry3<f64> {
+) -> Transform {
     /*transforms
     .binary_search_by_key(&13, |&(a, b)| b)
     .expect("TODO: panic message");*/
 
-    let transform = get_previous_transform(transforms, timestamp).unwrap_or_else(|| {
+    let timed_transform = get_previous_transform(transforms, timestamp).unwrap_or_else(|| {
         *transforms
             .first()
             .expect("at least one transform must be present")
     });
 
-    Isometry3::from_parts(transform.translation.into(), transform.rotation)
+    timed_transform.transform
 }
 
 /// Implements a linear interpolation for a vector of transforms.
 ///
 /// If requested [timestamp] is before the first transform in the vector, simply the first
 /// transform is returned.
-fn interpolate_linearly(transforms: &Vec<Transform>, timestamp: &DateTime<Utc>) -> Isometry3<f64> {
+pub(crate) fn interpolate_linearly(
+    transforms: &Vec<TimedTransform>,
+    timestamp: &DateTime<Utc>,
+) -> Transform {
     let (previous_transform, next_transform) =
         get_previous_and_next_transform(transforms, timestamp);
 
@@ -135,38 +110,44 @@ fn interpolate_linearly(transforms: &Vec<Transform>, timestamp: &DateTime<Utc>) 
             .num_nanoseconds()
             .expect("nanoseconds should be derivable") as f64;
 
-    let translation =
-        previous_transform.translation * (1.0 - weight) + next_transform.translation * weight;
+    let translation = previous_transform.transform.translation * (1.0 - weight)
+        + next_transform.transform.translation * weight;
     let rotation = previous_transform
+        .transform
         .rotation
-        .slerp(&next_transform.rotation, weight);
-    Isometry3::from_parts(translation.into(), rotation)
+        .slerp(&next_transform.transform.rotation, weight);
+    Transform::new(translation, rotation)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Transform;
     use approx::relative_eq;
     use chrono::TimeZone;
     use nalgebra::{Translation3, UnitQuaternion, Vector3};
 
     #[test]
     fn test_basic_interpolation() {
-        let transform_a = Transform::new(
+        let transform_a = TimedTransform::new(
             Utc.timestamp_opt(1, 1000).unwrap(),
-            Vector3::new(0.0, 0.0, 0.0),
-            UnitQuaternion::from_euler_angles(std::f64::consts::FRAC_PI_4, 0.0, 0.0),
+            Transform::new(
+                Vector3::new(0.0, 0.0, 0.0),
+                UnitQuaternion::from_euler_angles(std::f64::consts::FRAC_PI_4, 0.0, 0.0),
+            ),
         );
-        let transform_b = Transform::new(
+        let transform_b = TimedTransform::new(
             Utc.timestamp_opt(4, 4000).unwrap(),
-            Vector3::new(3.0, 6.0, -9.0),
-            UnitQuaternion::from_euler_angles(std::f64::consts::PI, 0.0, 0.0),
+            Transform::new(
+                Vector3::new(3.0, 6.0, -9.0),
+                UnitQuaternion::from_euler_angles(std::f64::consts::PI, 0.0, 0.0),
+            ),
         );
-        let transforms: Vec<Transform> = vec![transform_a, transform_b]; // : &Vec<Transform>, timestamp: &DateTime<Utc>
+        let transforms: Vec<TimedTransform> = vec![transform_a, transform_b]; // : &Vec<Transform>, timestamp: &DateTime<Utc>
         let timestamp: DateTime<Utc> = Utc.timestamp_opt(2, 2000).unwrap();
         let result = interpolate_linearly(&transforms, &timestamp);
 
-        assert_eq!(result.translation, Translation3::new(1.0, 2.0, -3.0));
+        assert_eq!(result.translation, Vector3::new(1.0, 2.0, -3.0));
         assert_eq!(
             result.rotation.euler_angles(),
             (std::f64::consts::FRAC_PI_2, 0.0, 0.0)
@@ -175,41 +156,49 @@ mod tests {
 
     #[test]
     fn test_linear_extrapolation_after() {
-        let transform_a = Transform::new(
+        let transform_a = TimedTransform::new(
             Utc.timestamp_opt(1, 0).unwrap(),
-            Vector3::new(1.0, 2.0, 3.0),
-            UnitQuaternion::from_euler_angles(0.0, 0.0, 0.0),
+            Transform::new(
+                Vector3::new(1.0, 2.0, 3.0),
+                UnitQuaternion::from_euler_angles(0.0, 0.0, 0.0),
+            ),
         );
-        let transform_b = Transform::new(
+        let transform_b = TimedTransform::new(
             Utc.timestamp_opt(2, 0).unwrap(),
-            Vector3::new(2.0, 3.0, 4.0),
-            UnitQuaternion::from_euler_angles(std::f64::consts::FRAC_PI_2, 0.0, 0.0),
+            Transform::new(
+                Vector3::new(2.0, 3.0, 4.0),
+                UnitQuaternion::from_euler_angles(std::f64::consts::FRAC_PI_2, 0.0, 0.0),
+            ),
         );
-        let transforms: Vec<Transform> = vec![transform_a, transform_b];
+        let transforms: Vec<TimedTransform> = vec![transform_a, transform_b];
         let timestamp: DateTime<Utc> = Utc.timestamp_opt(3, 0).unwrap();
         let result = extrapolate_linear(&transforms, &timestamp);
 
-        assert_eq!(result.translation, Translation3::new(3.0, 4.0, 5.0));
+        assert_eq!(result.translation, Vector3::new(3.0, 4.0, 5.0));
         relative_eq!(result.rotation.euler_angles().0, std::f64::consts::PI,);
     }
 
     #[test]
     fn test_linear_extrapolation_before() {
-        let transform_a = Transform::new(
+        let transform_a = TimedTransform::new(
             Utc.timestamp_opt(1, 0).unwrap(),
-            Vector3::new(1.0, 2.0, 3.0),
-            UnitQuaternion::from_euler_angles(0.0, 0.0, 0.0),
+            Transform::new(
+                Vector3::new(1.0, 2.0, 3.0),
+                UnitQuaternion::from_euler_angles(0.0, 0.0, 0.0),
+            ),
         );
-        let transform_b = Transform::new(
+        let transform_b = TimedTransform::new(
             Utc.timestamp_opt(2, 0).unwrap(),
-            Vector3::new(2.0, 3.0, 4.0),
-            UnitQuaternion::from_euler_angles(std::f64::consts::FRAC_PI_2, 0.0, 0.0),
+            Transform::new(
+                Vector3::new(2.0, 3.0, 4.0),
+                UnitQuaternion::from_euler_angles(std::f64::consts::FRAC_PI_2, 0.0, 0.0),
+            ),
         );
-        let transforms: Vec<Transform> = vec![transform_a, transform_b];
+        let transforms: Vec<TimedTransform> = vec![transform_a, transform_b];
         let timestamp: DateTime<Utc> = Utc.timestamp_opt(0, 0).unwrap();
         let result = extrapolate_linear(&transforms, &timestamp);
 
-        assert_eq!(result.translation, Translation3::new(0.0, 1.0, 2.0));
+        assert_eq!(result.translation, Vector3::new(0.0, 1.0, 2.0));
         relative_eq!(
             result.rotation.euler_angles().0,
             -std::f64::consts::FRAC_PI_2,

@@ -2,6 +2,7 @@ use crate::util::parse_timestamp;
 use chrono::{DateTime, Utc};
 use clap::ValueHint;
 use clap::{Parser, Subcommand};
+use ecoord::FrameId;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -40,52 +41,19 @@ pub enum Commands {
         /// Example: 2020-04-12 22:10:57.123456789 +00:00
         /// If not provided, the import starts from the beginning
         #[clap(long, value_parser = parse_timestamp)]
-        stop_date_time: DateTime<Utc>,
+        end_date_time: DateTime<Utc>,
 
-        #[clap(long, default_value_t = String::from("slam"))]
-        trajectory_channel_id: String,
+        #[clap(long, default_value_t = FrameId::local())]
+        trajectory_parent_frame_id: FrameId,
 
-        #[clap(long, default_value_t = String::from("world_offset"))]
-        trajectory_frame_id: String,
+        #[clap(long, default_value_t = FrameId::base_link())]
+        trajectory_child_frame_id: FrameId,
 
-        #[clap(long, default_value_t = String::from("base_link"))]
-        trajectory_child_frame_id: String,
-
-        #[clap(long, default_value_t = String::from("world_offset"))]
-        world_offset_channel_id: String,
-
-        #[clap(long, default_value_t = String::from("world"))]
-        world_frame_id: String,
+        #[clap(long, default_value_t = FrameId::global())]
+        global_frame_id: FrameId,
 
         #[clap(long, number_of_values = 3, allow_hyphen_values = true)]
-        world_offset: Vec<f64>,
-
-        /// Format the output with indentation and line breaks for readability
-        #[clap(short, long, default_value_t = false)]
-        pretty: bool,
-    },
-
-    /// Convert from tabular format, such as CSV
-    ConvertFromTabularFormat {
-        /// Path to the input file or directory containing tabular files
-        #[arg(short, long, value_name = "PATH", value_hint = ValueHint::AnyPath)]
-        input_path: PathBuf,
-
-        /// Path to the output ecoord file or directory
-        #[clap(short, long, value_hint = ValueHint::AnyPath)]
-        output_path: PathBuf,
-
-        /// Channel ID for the trajectory data (e.g., "slam" or "rtk_gnss")
-        #[clap(long)]
-        trajectory_channel_id: String,
-
-        /// Frame ID representing the reference frame for the trajectory (e.g., "world")
-        #[clap(long)]
-        trajectory_frame_id: String,
-
-        /// Frame ID of the moving body/child frame in the trajectory transform (e.g., "left_lidar_sensor")
-        #[clap(long)]
-        trajectory_child_frame_id: String,
+        local_origin_offset: Vec<f64>,
 
         /// Format the output with indentation and line breaks for readability
         #[clap(short, long, default_value_t = false)]

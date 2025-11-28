@@ -6,18 +6,18 @@ use std::fmt;
 /// Dedicated type for an identifier of a transform.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct TransformId {
-    pub frame_id: FrameId,
+    pub parent_frame_id: FrameId,
     pub child_frame_id: FrameId,
 }
 
 impl TransformId {
-    pub fn new(frame_id: FrameId, child_frame_id: FrameId) -> Self {
+    pub fn new(parent_frame_id: FrameId, child_frame_id: FrameId) -> Self {
         assert_ne!(
-            frame_id, child_frame_id,
+            parent_frame_id, child_frame_id,
             "frame_id must be different from child_frame_id"
         );
         Self {
-            frame_id,
+            parent_frame_id,
             child_frame_id,
         }
     }
@@ -28,37 +28,71 @@ impl fmt::Display for TransformId {
         write!(
             f,
             "frame_id={} child_frame_id={}",
-            self.frame_id, self.child_frame_id
+            self.parent_frame_id, self.child_frame_id
         )
+    }
+}
+
+impl From<(FrameId, FrameId)> for TransformId {
+    fn from((parent_frame_id, child_frame_id): (FrameId, FrameId)) -> Self {
+        Self::new(parent_frame_id, child_frame_id)
+    }
+}
+
+impl From<(&FrameId, &FrameId)> for TransformId {
+    fn from((parent_frame_id, child_frame_id): (&FrameId, &FrameId)) -> Self {
+        Self::new(parent_frame_id.clone(), child_frame_id.clone())
+    }
+}
+
+impl From<(&str, &str)> for TransformId {
+    fn from((parent, child): (&str, &str)) -> Self {
+        TransformId::new(FrameId::from(parent), FrameId::from(child))
     }
 }
 
 /// A time-dependent rigid transformation in 3D.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Transform {
+pub struct TimedTransform {
     pub timestamp: DateTime<Utc>,
-    pub translation: Vector3<f64>,
-    pub rotation: UnitQuaternion<f64>,
+    pub transform: Transform,
 }
 
-impl Transform {
-    pub fn new(
-        timestamp: DateTime<Utc>,
-        translation: Vector3<f64>,
-        rotation: UnitQuaternion<f64>,
-    ) -> Self {
-        //let rotation = UnitQuaternion::from_quaternion(rotation);
-
+impl TimedTransform {
+    pub fn new(timestamp: DateTime<Utc>, transform: Transform) -> Self {
         Self {
             timestamp,
-            translation,
-            rotation,
+            transform,
         }
     }
 
     pub fn from(timestamp: DateTime<Utc>, isometry: Isometry3<f64>) -> Self {
         Self {
             timestamp,
+            transform: Transform::from(isometry),
+        }
+    }
+}
+
+/// A time-dependent rigid transformation in 3D.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Transform {
+    pub translation: Vector3<f64>,
+    pub rotation: UnitQuaternion<f64>,
+}
+
+impl Transform {
+    pub fn new(translation: Vector3<f64>, rotation: UnitQuaternion<f64>) -> Self {
+        //let rotation = UnitQuaternion::from_quaternion(rotation);
+
+        Self {
+            translation,
+            rotation,
+        }
+    }
+
+    pub fn from(isometry: Isometry3<f64>) -> Self {
+        Self {
             translation: isometry.translation.vector,
             rotation: isometry.rotation,
         }

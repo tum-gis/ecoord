@@ -10,6 +10,6 @@ description = "Library for transforming between 3D coordinate frames."
 [features]
 
 [dependencies]
-ecoord-core = { version = "0.0.1-alpha.9", path = "../ecoord-core" }
-ecoord-transform = { version = "0.0.1-alpha.9", path = "../ecoord-transform" }
-ecoord-io = { version = "0.0.1-alpha.9", path = "../ecoord-io" }
+ecoord-core = { version = "0.0.1-alpha.10", path = "../ecoord-core" }
+ecoord-transform = { version = "0.0.1-alpha.10", path = "../ecoord-transform" }
+ecoord-io = { version = "0.0.1-alpha.10", path = "../ecoord-io" }

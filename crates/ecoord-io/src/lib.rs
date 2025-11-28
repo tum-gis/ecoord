@@ -1,7 +1,7 @@
 mod ecoord;
 mod error;
 mod kitti;
-mod tabular;
+pub mod util;
 
 #[doc(inline)]
 pub use crate::error::Error;
@@ -16,10 +16,7 @@ pub use crate::ecoord::write::EcoordWriter;
 pub use crate::kitti::read::KittiReader;
 
 #[doc(inline)]
-pub use crate::tabular::read::TabularReader;
+pub use crate::kitti::FILE_EXTENSION_KITTI_FORMAT;
 
 #[doc(inline)]
-pub use crate::ecoord::FILE_EXTENSION_ECOORD_FORMAT;
-
-#[doc(inline)]
-pub use crate::tabular::FILE_EXTENSION_TABULAR_CSV_FORMAT;
+pub use crate::util::Compression;

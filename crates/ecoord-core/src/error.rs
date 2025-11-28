@@ -1,4 +1,5 @@
-use crate::{ChannelId, FrameId, TransformId};
+use crate::{FrameId, TransformId};
+use chrono::{DateTime, Utc};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -6,20 +7,20 @@ pub enum Error {
     #[error(transparent)]
     CoordsError(#[from] crate::coords::error::Error),
 
-    #[error("invalid channel id `{0}`")]
-    InvalidChannelId(ChannelId),
-    #[error("invalid channel ids")]
-    InvalidChannelIds(Vec<ChannelId>),
-    #[error("transform with id `{1}` not available for channel with id `{0}`")]
-    InvalidTransformId(ChannelId, TransformId),
+    #[error("transform with id `{0}` not available")]
+    InvalidTransformId(TransformId),
 
     #[error("invalid frame id `{0}`")]
     InvalidFrameId(FrameId),
 
-    #[error("no channels")]
-    NoChannels(),
     #[error("no transforms")]
     NoTransforms(),
+
+    #[error("no transforms")]
+    ContainsDynamicTransform(),
+
+    #[error("duplicate timestamp `{0}`")]
+    DuplicateTimestamp(DateTime<Utc>),
 
     #[error("no transform path found for `{0}`")]
     NoTransformPath(TransformId),
@@ -34,14 +35,8 @@ pub enum Error {
     TransformsNotSortedByTime(),
 
     #[error("transforms must be sorted strictly ascending by timestamp")]
-    TransformsNotSorted {
-        channel_id: ChannelId,
-        transform_id: TransformId,
-    },
+    TransformsNotSorted { transform_id: TransformId },
 
     #[error("collision")]
-    ChannelTransformCollisions {
-        channel_id: ChannelId,
-        transform_id: TransformId,
-    },
+    ChannelTransformCollisions { transform_id: TransformId },
 }

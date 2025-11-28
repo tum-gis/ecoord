@@ -1,17 +1,17 @@
-mod channel_info;
 mod coords;
 mod error;
-mod frame_info;
-mod isometry_graph;
+mod frame_graph;
+mod frames;
 pub mod octree;
 mod ops;
-pub mod reference_frames;
 mod transform;
+mod transform_edge;
 mod transform_info;
+pub mod transform_tree;
 mod utils;
 
 #[doc(inline)]
-pub use crate::reference_frames::ReferenceFrames;
+pub use crate::transform_tree::TransformTree;
 
 #[doc(inline)]
 pub use crate::transform::TransformId;
@@ -20,19 +20,22 @@ pub use crate::transform::TransformId;
 pub use crate::transform::Transform;
 
 #[doc(inline)]
-pub use crate::frame_info::FrameId;
+pub use crate::transform::TimedTransform;
 
 #[doc(inline)]
-pub use crate::frame_info::FrameInfo;
+pub use crate::frames::FrameId;
 
 #[doc(inline)]
-pub use crate::channel_info::ChannelId;
+pub use crate::frames::FrameInfo;
 
 #[doc(inline)]
-pub use crate::channel_info::ChannelInfo;
+pub use crate::transform_edge::TransformEdge;
 
 #[doc(inline)]
-pub use crate::transform_info::TransformInfo;
+pub use crate::transform_edge::DynamicTransform;
+
+#[doc(inline)]
+pub use crate::transform_edge::StaticTransform;
 
 #[doc(inline)]
 pub use crate::transform_info::InterpolationMethod;

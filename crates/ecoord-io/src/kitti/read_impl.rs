@@ -1,9 +1,6 @@
 use crate::kitti::error::Error;
 use chrono::{DateTime, Utc};
-use ecoord_core::{
-    ChannelId, ExtrapolationMethod, FrameId, InterpolationMethod, ReferenceFrames, Transform,
-    TransformId, TransformInfo,
-};
+use ecoord_core::{FrameId, TimedTransform, Transform, TransformId, TransformTree};
 use nalgebra::{Isometry3, matrix};
 use std::collections::HashMap;
 use std::io::Read;
@@ -36,14 +33,12 @@ impl From<Record> for nalgebra::Matrix4<f64> {
 pub fn read_from_csv_file<R: Read>(
     reader: R,
     start_date_time: DateTime<Utc>,
-    stop_date_time: DateTime<Utc>,
-    trajectory_channel_id: ChannelId,
+    end_date_time: DateTime<Utc>,
     trajectory_frame_id: FrameId,
     trajectory_child_frame_id: FrameId,
-    world_offset_channel_id: ChannelId,
-    world_frame_id: FrameId,
-    world_offset: Option<nalgebra::Vector3<f64>>,
-) -> Result<ReferenceFrames, Error> {
+    global_frame_id: FrameId,
+    local_origin_offset: Option<nalgebra::Vector3<f64>>,
+) -> Result<TransformTree, Error> {
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(false)
         .delimiter(b' ')
@@ -60,47 +55,46 @@ pub fn read_from_csv_file<R: Read>(
         .map(|x| nalgebra::try_convert(x).ok_or(Error::IsometryNotDerivable()))
         .collect::<Result<_, _>>()?;
 
-    let total_duration = stop_date_time - start_date_time;
+    let total_duration = end_date_time - start_date_time;
     let step_duration = total_duration / records_isometries.len() as i32;
 
-    let transforms: Vec<Transform> = records_isometries
+    let transforms: Vec<TimedTransform> = records_isometries
         .into_iter()
         .enumerate()
         .map(|(i, isometry)| {
             let timestamp = start_date_time + step_duration * i as i32;
-            Transform::new(timestamp, isometry.translation.vector, isometry.rotation)
+            TimedTransform::new(
+                timestamp,
+                Transform::new(isometry.translation.vector, isometry.rotation),
+            )
         })
         .collect();
     let transform_id = TransformId::new(trajectory_frame_id.clone(), trajectory_child_frame_id);
 
-    let mut transforms: HashMap<(ChannelId, TransformId), Vec<Transform>> =
-        HashMap::from([((trajectory_channel_id, transform_id.clone()), transforms)]);
+    let mut transforms: HashMap<TransformId, Vec<TimedTransform>> =
+        HashMap::from([(transform_id.clone(), transforms)]);
 
-    let mut transform_info: HashMap<TransformId, TransformInfo> = HashMap::from([(
+    /*let mut transform_info: HashMap<TransformId, TransformInfo> = HashMap::from([(
         transform_id,
         TransformInfo::new(InterpolationMethod::Linear, ExtrapolationMethod::Constant),
-    )]);
+    )]);*/
 
-    if let Some(world_offset) = world_offset {
-        let world_transform_id =
-            TransformId::new(world_frame_id.clone(), trajectory_frame_id.clone());
-        let world_transform = Transform::new(
+    if let Some(local_origin_offset) = local_origin_offset {
+        let global_transform_id =
+            TransformId::new(global_frame_id.clone(), trajectory_frame_id.clone());
+        let global_transform = TimedTransform::new(
             start_date_time,
-            world_offset,
-            nalgebra::UnitQuaternion::identity(),
+            Transform::new(local_origin_offset, nalgebra::UnitQuaternion::identity()),
         );
-        transforms.insert(
-            (world_offset_channel_id, world_transform_id.clone()),
-            vec![world_transform],
-        );
+        transforms.insert(global_transform_id.clone(), vec![global_transform]);
 
-        transform_info.insert(
-            world_transform_id,
+        /*transform_info.insert(
+            global_transform_id,
             TransformInfo::new(InterpolationMethod::Step, ExtrapolationMethod::Constant),
-        );
+        );*/
     }
 
-    let reference_frames =
-        ReferenceFrames::new(transforms, HashMap::new(), HashMap::new(), transform_info)?;
-    Ok(reference_frames)
+    todo!("implement edges");
+    let transform_tree = TransformTree::new(Vec::new(), Vec::new())?;
+    Ok(transform_tree)
 }

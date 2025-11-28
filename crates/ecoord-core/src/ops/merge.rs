@@ -1,75 +1,28 @@
-use crate::{
-    ChannelId, ChannelInfo, FrameId, FrameInfo, ReferenceFrames, Transform, TransformId,
-    TransformInfo,
-};
+use crate::{FrameId, FrameInfo, TransformId, TransformTree};
 
 use crate::error::Error;
 
-use crate::Error::ChannelTransformCollisions;
-use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use crate::transform_edge::TransformEdge;
+use std::collections::HashMap;
 
-/// Merges a list of reference frame systems to a single reference frame system.
-/// Requires unique [ChannelId] and [TransformId] combinations across the input [ReferenceFrames].
-pub fn merge(reference_frames: &[ReferenceFrames]) -> Result<ReferenceFrames, Error> {
-    let all_combinations: HashSet<&(ChannelId, TransformId)> = reference_frames
-        .iter()
-        .flat_map(|r| r.transforms.keys())
-        .collect();
-    for current_combination in all_combinations {
-        let number_of_occurrences = reference_frames
-            .iter()
-            .filter(|r| r.transforms.keys().contains(current_combination))
-            .count();
-        if number_of_occurrences > 1 {
-            return Err(ChannelTransformCollisions {
-                channel_id: current_combination.0.clone(),
-                transform_id: current_combination.1.clone(),
-            });
-        }
-    }
+/// Merges a list of transform trees to a single transform tree.
+/// Requires unique [TransformId] combinations across the input [TransformTree].
+pub fn merge(transform_trees: &[TransformTree]) -> Result<TransformTree, Error> {
+    let mut combined_edges: HashMap<TransformId, TransformEdge> = HashMap::new();
+    let mut combined_frames: HashMap<FrameId, FrameInfo> = HashMap::new();
 
-    let mut all_transforms: HashMap<(ChannelId, TransformId), Vec<Transform>> = HashMap::new();
-    let mut all_frame_infos: HashMap<FrameId, FrameInfo> = HashMap::new();
-    let mut all_channel_infos: HashMap<ChannelId, ChannelInfo> = HashMap::new();
-    let mut all_transform_infos: HashMap<TransformId, TransformInfo> = HashMap::new();
-
-    for current_reference_frame in reference_frames {
-        current_reference_frame.transforms.iter().for_each(|t| {
-            all_transforms
-                .entry(t.0.clone())
-                .or_default()
-                .append(&mut t.1.clone())
+    for current_transform_tree in transform_trees {
+        current_transform_tree.edges.iter().for_each(|t| {
+            combined_edges.insert(t.0.clone(), t.1.clone());
         });
 
-        current_reference_frame.frame_info.iter().for_each(|t| {
-            // TODO: error, if different frame infos are available
-            all_frame_infos.insert(t.0.clone(), t.1.clone());
-        });
-
-        current_reference_frame.channel_info.iter().for_each(|t| {
-            // TODO: error, if different channel infos are available
-            all_channel_infos.insert(t.0.clone(), t.1.clone());
-        });
-
-        current_reference_frame.transform_info.iter().for_each(|t| {
-            // TODO: error, if different channel infos are available
-            all_transform_infos.insert(t.0.clone(), t.1.clone());
+        current_transform_tree.frames.iter().for_each(|t| {
+            combined_frames.insert(t.0.clone(), t.1.clone());
         });
     }
 
-    for current_transform in all_transforms.values_mut() {
-        current_transform.sort_by_key(|t| {
-            t.timestamp
-                .timestamp_nanos_opt()
-                .expect("should be defined")
-        });
-    }
-
-    ReferenceFrames::new(
-        all_transforms,
-        all_frame_infos,
-        all_channel_infos,
-        all_transform_infos,
+    TransformTree::new(
+        combined_edges.into_values().collect(),
+        combined_frames.into_values().collect(),
     )
 }

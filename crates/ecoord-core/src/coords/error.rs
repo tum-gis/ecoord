@@ -2,8 +2,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug, Eq, PartialEq)]
 pub enum Error {
-    //#[error("data store disconnected")]
-    //InvalidChannelId(ChannelId),
     #[error("No row indices specified")]
     LowerBoundExceedsUpperBound,
 

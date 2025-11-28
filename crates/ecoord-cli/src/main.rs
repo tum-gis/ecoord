@@ -7,7 +7,6 @@ use anyhow::Result;
 
 use crate::cli::{Cli, Commands};
 use clap::Parser;
-use ecoord::{ChannelId, FrameId};
 use nalgebra::Vector3;
 
 fn main() -> Result<()> {
@@ -23,28 +22,21 @@ fn main() -> Result<()> {
             ecoord_file_path,
             pretty,
             start_date_time,
-            stop_date_time,
-            trajectory_channel_id,
-            trajectory_frame_id,
+            end_date_time,
+            trajectory_parent_frame_id,
             trajectory_child_frame_id,
-            world_offset_channel_id,
-            world_frame_id,
-            world_offset,
+            global_frame_id,
+            local_origin_offset,
         } => {
-            let trajectory_channel_id = ChannelId::from(trajectory_channel_id.clone());
-            let trajectory_frame_id = FrameId::from(trajectory_frame_id.clone());
-            let trajectory_child_frame_id = FrameId::from(trajectory_child_frame_id.clone());
-            let world_offset_channel_id = ChannelId::from(world_offset_channel_id.clone());
-            let world_frame_id = FrameId::from(world_frame_id.clone());
-            let world_offset: Option<Vector3<f64>> = match world_offset.len() {
+            let local_origin_offset: Option<Vector3<f64>> = match local_origin_offset.len() {
                 3 => Some(Vector3::new(
-                    world_offset[0],
-                    world_offset[1],
-                    world_offset[2],
+                    local_origin_offset[0],
+                    local_origin_offset[1],
+                    local_origin_offset[2],
                 )),
                 0 => None,
                 _ => {
-                    panic!("world_offset must be of length 3");
+                    panic!("local_origin_offset must be of length 3");
                 }
             };
 
@@ -52,34 +44,11 @@ fn main() -> Result<()> {
                 kitti_file_path,
                 ecoord_file_path,
                 *start_date_time,
-                *stop_date_time,
-                trajectory_channel_id,
-                trajectory_frame_id,
-                trajectory_child_frame_id,
-                world_offset_channel_id,
-                world_frame_id,
-                world_offset,
-                *pretty,
-            )?;
-        }
-        Commands::ConvertFromTabularFormat {
-            input_path,
-            output_path,
-            trajectory_channel_id,
-            trajectory_frame_id,
-            trajectory_child_frame_id,
-            pretty,
-        } => {
-            let trajectory_channel_id = ChannelId::from(trajectory_channel_id.clone());
-            let trajectory_frame_id = FrameId::from(trajectory_frame_id.clone());
-            let trajectory_child_frame_id = FrameId::from(trajectory_child_frame_id.clone());
-
-            commands::convert_tabular::run(
-                input_path,
-                output_path,
-                trajectory_channel_id,
-                trajectory_frame_id,
-                trajectory_child_frame_id,
+                *end_date_time,
+                trajectory_parent_frame_id.clone(),
+                trajectory_child_frame_id.clone(),
+                global_frame_id.clone(),
+                local_origin_offset,
                 *pretty,
             )?;
         }

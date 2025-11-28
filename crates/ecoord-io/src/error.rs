@@ -5,12 +5,16 @@ pub enum Error {
     #[error(transparent)]
     EcoordError(#[from] ecoord_core::Error),
     #[error(transparent)]
-    Io(#[from] std::io::Error),
+    IoError(#[from] std::io::Error),
     #[error(transparent)]
-    Parsing(#[from] serde_json::Error),
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error(transparent)]
+    CsvError(#[from] csv::Error),
+    #[error(transparent)]
+    ChronoParseError(#[from] chrono::ParseError),
 
     #[error(transparent)]
-    KittiReader(#[from] crate::kitti::error::Error),
+    KittiReaderError(#[from] crate::kitti::error::Error),
 
     #[error("file extension is invalid")]
     NoFileExtension(),
@@ -18,4 +22,13 @@ pub enum Error {
     InvalidFileExtension(String),
     #[error("file extension is invalid")]
     NoFileName(),
+    #[error("multiple files found")]
+    MultipleFiles(),
+
+    #[error("timestamp is missing")]
+    NoTimestamp(),
+    #[error("timestamp is missing")]
+    TimestampDefinedTwice(),
+    #[error("timestamp is missing")]
+    InvalidTimestamp(),
 }
